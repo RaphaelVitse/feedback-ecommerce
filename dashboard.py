@@ -47,7 +47,7 @@ st.title("📊 Analyseur de Feedbacks Clients E-commerce")
 
 # --- Bouton de lancement manuel du pipeline ---
 # Permet de forcer une analyse immédiate sans attendre GitHub Actions
-if st.button("🔄 Lancer l'analyse", type="primary"):
+if st.button("🔄 Actualiser", type="primary"):
     with st.spinner("Pipeline en cours..."):
         run_pipeline()  # exécute le pipeline complet
     st.success("Analyse terminée ✅")
