@@ -1,31 +1,53 @@
-name: Run Feedback Pipeline
+# ============================================================
+# pipeline.yml
+# GitHub Actions — Automatisation du pipeline de feedback
+# Lance pipeline.py automatiquement toutes les 30 minutes
+# Fonctionne sans serveur, gratuitement sur GitHub
+# ============================================================
+
+name: Run Feedback Pipeline  # nom affiché dans l'onglet Actions de GitHub
 
 on:
   schedule:
-    - cron: '*/30 * * * *'  # toutes les 30 minutes
-  workflow_dispatch:  # permet de lancer manuellement depuis GitHub
+    # Cron : toutes les 30 minutes
+    # Format : minute heure jour mois jour_semaine
+    # */30 = toutes les 30 minutes
+    - cron: '*/30 * * * *'
+
+  # Permet aussi de déclencher le pipeline manuellement
+  # depuis l'onglet Actions → Run workflow
+  workflow_dispatch:
 
 jobs:
   run-pipeline:
+    # Utilise une machine virtuelle Ubuntu fournie par GitHub
     runs-on: ubuntu-latest
 
     steps:
+      # Étape 1 : Récupération du code source depuis GitHub
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Étape 2 : Installation de Python 3.12
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
 
+      # Étape 3 : Installation des dépendances Python
+      # Lit le fichier requirements.txt et installe tous les packages
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      # Étape 4 : Lancement du pipeline
+      # Les variables d'environnement sont injectées depuis
+      # les secrets GitHub (Settings → Secrets → Actions)
+      # Elles ne sont jamais visibles dans les logs
       - name: Run pipeline
         env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          AIRTABLE_TOKEN: ${{ secrets.AIRTABLE_TOKEN }}
-          AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
-          AIRTABLE_TABLE_NAME: ${{ secrets.AIRTABLE_TABLE_NAME }}
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
-        run: python pipeline.py
+          GROQ_API_KEY:      ${{ secrets.GROQ_API_KEY }}       # clé API Groq/Llama
+          AIRTABLE_TOKEN:    ${{ secrets.AIRTABLE_TOKEN }}     # token Airtable
+          AIRTABLE_BASE_ID:  ${{ secrets.AIRTABLE_BASE_ID }}   # ID de la base Airtable
+          AIRTABLE_TABLE_NAME: ${{ secrets.AIRTABLE_TABLE_NAME }} # nom de la table
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }} # credentials Google en JSON
+        run: python pipeline.py  # exécution du pipeline principal
