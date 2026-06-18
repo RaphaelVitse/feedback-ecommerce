@@ -1,7 +1,6 @@
 import gspread
 from google.oauth2.service_account import Credentials
 import pandas as pd
-import streamlit as st
 import json
 import os
 
@@ -11,12 +10,20 @@ SCOPES = [
 ]
 
 def get_feedbacks() -> pd.DataFrame:
-    # Lecture credentials depuis Streamlit secrets ou fichier local
-    if "GOOGLE_CREDENTIALS" in st.secrets:
-        creds_dict = json.loads(st.secrets["GOOGLE_CREDENTIALS"])
-        creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
-    else:
-        creds = Credentials.from_service_account_file("credentials.json", scopes=SCOPES)
+    # 1. Streamlit Cloud
+    try:
+        import streamlit as st
+        if "GOOGLE_CREDENTIALS" in st.secrets:
+            creds_dict = json.loads(st.secrets["GOOGLE_CREDENTIALS"])
+            creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
+    # 2. GitHub Actions (variable d'environnement)
+    except:
+        if os.getenv("GOOGLE_CREDENTIALS"):
+            creds_dict = json.loads(os.getenv("GOOGLE_CREDENTIALS"))
+            creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
+        # 3. Local (fichier credentials.json)
+        else:
+            creds = Credentials.from_service_account_file("credentials.json", scopes=SCOPES)
 
     client = gspread.authorize(creds)
     sheet = client.open("feedback-ecommerce").sheet1
